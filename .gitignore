@@ -14,3 +14,6 @@ desktop.ini
 *.log
 .env
 .env.local
+
+# Supabase 키 (비공개 유지)
+config.js

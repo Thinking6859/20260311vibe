@@ -23,6 +23,46 @@
   const fortunes = window.FORTUNES || [];
 
   /**
+   * 추첨 결과를 서버 API 통해 Supabase에 저장 (Vercel 환경변수 사용)
+   */
+  function saveToSupabase(data, opts) {
+    if (!data || !opts) return;
+    var numbers = data.main.slice();
+    numbers.push(data.bonus);
+    var body = {
+      numbers: numbers,
+      source: opts.source,
+      fortune_index: opts.fortune_index ?? null,
+      fortune_text: opts.fortune_text ?? null
+    };
+    fetch("/api/save-lotto", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    })
+      .then(function (res) {
+        return res.text().then(function (text) {
+          var j;
+          try { j = JSON.parse(text); } catch (e) { j = { error: text }; }
+          return { ok: res.ok, status: res.status, json: j };
+        });
+      })
+      .then(function (r) {
+        if (r.ok) {
+          console.log("[로또] 저장 완료");
+        } else {
+          var msg = (r.json && r.json.error) || r.json.detail || "저장 실패 (status " + r.status + ")";
+          console.error("[로또] 저장 실패:", r.status, r.json);
+          alert("Supabase 저장 실패:\n\n" + msg);
+        }
+      })
+      .catch(function (err) {
+        console.error("[로또] 저장 요청 실패:", err);
+        alert("저장 요청 실패: " + (err.message || "네트워크 오류"));
+      });
+  }
+
+  /**
    * 시드 기반 난수 (같은 시드 → 같은 번호)
    */
   function seededRandom(seed) {
@@ -133,6 +173,7 @@
     var data = generateLottoNumbers();
     renderNumbers(data);
     addToHistory(data);
+    saveToSupabase(data, { source: "random" });
   }
 
   function runDraw() {
@@ -157,6 +198,11 @@
         fortuneResult.hidden = false;
         var lottoData = getLottoForFortuneIndex(index);
         renderNumbers(lottoData, "이 운세에 맞는 추천 번호");
+        saveToSupabase(lottoData, {
+          source: "fortune",
+          fortune_index: finalPicked,
+          fortune_text: fortuneStr
+        });
       }
     }, 70);
   }
