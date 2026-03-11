@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로또 번호 추천</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="glow glow-1" aria-hidden="true"></div>
+  <div class="glow glow-2" aria-hidden="true"></div>
+  <div class="glow glow-3" aria-hidden="true"></div>
+  <div class="sparkles" aria-hidden="true">
+    <span class="sparkle"></span><span class="sparkle"></span><span class="sparkle"></span>
+    <span class="sparkle"></span><span class="sparkle"></span><span class="sparkle"></span>
+  </div>
+  <div class="container">
+    <header class="header">
+      <span class="brand">LOTTO</span>
+      <h1><span class="title-gradient">로또 번호 추천</span></h1>
+      <p class="subtitle">1~45 중 겹치지 않는 6개 번호 + 보너스 번호를 추천해 드립니다</p>
+    </header>
+
+    <div class="app-layout">
+      <section class="fortune-section">
+        <h2 class="fortune-title">오늘의 운세</h2>
+        <p class="fortune-desc">추첨통에서 100가지 중 하나를 뽑아 보세요</p>
+        <div class="drum-wrap">
+          <div class="drum" id="drum" aria-live="polite">
+            <span class="drum-number" id="drumNumber">?</span>
+          </div>
+          <button type="button" class="btn btn-drum" id="drawBtn">뽑기</button>
+        </div>
+        <div class="fortune-result" id="fortuneResult" hidden>
+          <span class="fortune-label">운세</span>
+          <p class="fortune-text" id="fortuneText"></p>
+        </div>
+      </section>
+
+      <div class="main-border-wrap">
+      <main class="main">
+      <p class="numbers-caption" id="numbersCaption" hidden></p>
+      <div class="numbers-wrap" id="numbersWrap">
+        <div class="numbers-placeholder" id="placeholder">
+          <span class="placeholder-icon">◆</span>
+          버튼을 눌러 번호를 생성하세요
+        </div>
+        <div class="numbers-row" id="numbersRow" aria-live="polite"></div>
+        <div class="bonus-wrap" id="bonusWrap" hidden>
+          <span class="bonus-label">보너스</span>
+          <span class="ball ball-bonus" id="bonusBall" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="generateBtn">
+          번호 추천받기
+        </button>
+        <button type="button" class="btn btn-secondary" id="addSetBtn">
+          한 세트 더 받기
+        </button>
+      </div>
+
+      <section class="history" id="historySection" hidden>
+        <h2>추천 이력</h2>
+        <ul class="history-list" id="historyList"></ul>
+      </section>
+    </main>
+    </div>
+    </div>
+
+    <footer class="footer">
+      <p>참고용이며, 당첨을 보장하지 않습니다. 재미로만 이용해 주세요.</p>
+    </footer>
+  </div>
+  <script src="fortunes.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
