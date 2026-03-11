@@ -29,19 +29,33 @@ module.exports = async function (req, res) {
 
   let body;
   try {
-    if (typeof req.body === "string") {
+    if (req.body === undefined || req.body === null) {
+      const raw = await new Promise(function (resolve, reject) {
+        let data = "";
+        req.on("data", function (chunk) { data += chunk; });
+        req.on("end", function () { resolve(data); });
+        req.on("error", reject);
+      });
+      body = raw ? JSON.parse(raw) : {};
+    } else if (typeof req.body === "string") {
       body = req.body ? JSON.parse(req.body) : {};
     } else if (Buffer.isBuffer && Buffer.isBuffer(req.body)) {
       body = JSON.parse(req.body.toString("utf8"));
+    } else if (req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
+      body = req.body;
     } else {
-      body = req.body && typeof req.body === "object" ? req.body : {};
+      body = {};
     }
   } catch (e) {
     send(res, 400, { ok: false, error: "Invalid JSON body", detail: String(e.message) });
     return;
   }
 
-  const { numbers, source, fortune_index, fortune_text } = body;
+  const numbers = body.numbers;
+  const source = body.source;
+  const fortune_index = body.fortune_index;
+  const fortune_text = body.fortune_text;
+
   if (!Array.isArray(numbers) || numbers.length !== 7) {
     send(res, 400, { ok: false, error: "numbers must be array of 7 (6+bonus)" });
     return;

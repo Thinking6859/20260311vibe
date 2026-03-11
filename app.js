@@ -19,8 +19,16 @@
   const drawBtn = document.getElementById("drawBtn");
   const fortuneResult = document.getElementById("fortuneResult");
   const fortuneText = document.getElementById("fortuneText");
+  const saveLogEl = document.getElementById("saveLog");
 
   const fortunes = window.FORTUNES || [];
+
+  function showSaveLog(message, isError) {
+    if (!saveLogEl) return;
+    saveLogEl.textContent = message;
+    saveLogEl.className = "save-log " + (isError ? "save-log--error" : "save-log--ok");
+    saveLogEl.hidden = false;
+  }
 
   /**
    * 추첨 결과를 서버 API 통해 Supabase에 저장 (Vercel 환경변수 사용)
@@ -49,16 +57,14 @@
       })
       .then(function (r) {
         if (r.ok) {
-          console.log("[로또] 저장 완료");
+          showSaveLog("저장 완료", false);
         } else {
-          var msg = (r.json && r.json.error) || r.json.detail || "저장 실패 (status " + r.status + ")";
-          console.error("[로또] 저장 실패:", r.status, r.json);
-          alert("Supabase 저장 실패:\n\n" + msg);
+          var msg = (r.json && r.json.error) || r.json.detail || "status " + r.status;
+          showSaveLog("저장 실패: " + msg, true);
         }
       })
       .catch(function (err) {
-        console.error("[로또] 저장 요청 실패:", err);
-        alert("저장 요청 실패: " + (err.message || "네트워크 오류"));
+        showSaveLog("저장 요청 실패: " + (err.message || "네트워크 오류"), true);
       });
   }
 
