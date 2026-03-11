@@ -4,11 +4,14 @@
  */
 module.exports = function (req, res) {
   const url = (process.env.SUPABASE_URL || "").trim();
-  const key = (process.env.SUPABASE_ANON_KEY || "").trim();
+  const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  const anonKey = (process.env.SUPABASE_ANON_KEY || "").trim();
+  const hasKey = !!(serviceKey || anonKey);
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.status(200).json({
     SUPABASE_URL: url ? "설정됨 (" + url.substring(0, 30) + "...)" : "없음",
-    SUPABASE_ANON_KEY: key ? "설정됨 (길이 " + key.length + ")" : "없음",
-    ok: !!(url && key),
+    SUPABASE_SERVICE_ROLE_KEY: serviceKey ? "설정됨 (권장)" : "없음",
+    SUPABASE_ANON_KEY: anonKey ? "설정됨" : "없음",
+    ok: !!(url && hasKey),
   });
 };

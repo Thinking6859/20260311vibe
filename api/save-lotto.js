@@ -1,22 +1,28 @@
 /**
  * Vercel 서버리스: 로또 추첨 결과를 Supabase에 저장
- * 환경 변수: SUPABASE_URL, SUPABASE_ANON_KEY
+ * 환경 변수: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (권장) 또는 SUPABASE_ANON_KEY
  */
-module.exports = async function (req, res) {
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
+function send(res, status, data) {
+  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.end(JSON.stringify(data));
+}
 
+module.exports = async function (req, res) {
   if (req.method !== "POST") {
-    res.status(405).json({ ok: false, error: "Method not allowed" });
+    send(res, 405, { ok: false, error: "Method not allowed" });
     return;
   }
 
   const url = (process.env.SUPABASE_URL || "").trim();
-  const key = (process.env.SUPABASE_ANON_KEY || "").trim();
+  const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  const anonKey = (process.env.SUPABASE_ANON_KEY || "").trim();
+  const key = serviceKey || anonKey;
+
   if (!url || !key) {
-    res.status(500).json({
+    send(res, 500, {
       ok: false,
-      error: "SUPABASE_URL or SUPABASE_ANON_KEY not set in Vercel",
-      hint: "Vercel 대시보드 → Settings → Environment Variables 확인 후 Redeploy",
+      error: "환경 변수 없음",
+      detail: "Vercel에 SUPABASE_URL과 SUPABASE_SERVICE_ROLE_KEY(또는 SUPABASE_ANON_KEY)를 넣고 Redeploy 하세요.",
     });
     return;
   }
@@ -24,24 +30,24 @@ module.exports = async function (req, res) {
   let body;
   try {
     if (typeof req.body === "string") {
-      body = JSON.parse(req.body);
+      body = req.body ? JSON.parse(req.body) : {};
     } else if (Buffer.isBuffer && Buffer.isBuffer(req.body)) {
       body = JSON.parse(req.body.toString("utf8"));
     } else {
-      body = req.body || {};
+      body = req.body && typeof req.body === "object" ? req.body : {};
     }
   } catch (e) {
-    res.status(400).json({ ok: false, error: "Invalid JSON body", detail: String(e.message) });
+    send(res, 400, { ok: false, error: "Invalid JSON body", detail: String(e.message) });
     return;
   }
 
   const { numbers, source, fortune_index, fortune_text } = body;
   if (!Array.isArray(numbers) || numbers.length !== 7) {
-    res.status(400).json({ ok: false, error: "numbers must be array of 7 (6+bonus)" });
+    send(res, 400, { ok: false, error: "numbers must be array of 7 (6+bonus)" });
     return;
   }
   if (source !== "random" && source !== "fortune") {
-    res.status(400).json({ ok: false, error: "source must be random or fortune" });
+    send(res, 400, { ok: false, error: "source must be random or fortune" });
     return;
   }
 
@@ -57,6 +63,7 @@ module.exports = async function (req, res) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Accept: "application/json",
       apikey: key,
       Authorization: "Bearer " + key,
       Prefer: "return=minimal",
@@ -64,16 +71,21 @@ module.exports = async function (req, res) {
     body: JSON.stringify(row),
   });
 
+  const text = await response.text();
   if (!response.ok) {
-    const text = await response.text();
-    console.error("Supabase insert failed", response.status, text);
-    res.status(500).json({
+    let detail = text;
+    try {
+      const errJson = JSON.parse(text);
+      detail = errJson.message || errJson.error_description || text;
+    } catch (_) {}
+    console.error("Supabase insert failed", response.status, detail);
+    send(res, 500, {
       ok: false,
-      error: "Supabase insert failed",
-      detail: text.slice(0, 200),
+      error: "Supabase 저장 실패",
+      detail: (detail || "unknown").slice(0, 400),
     });
     return;
   }
 
-  res.status(200).json({ ok: true });
+  send(res, 200, { ok: true });
 };

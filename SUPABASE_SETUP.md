@@ -48,58 +48,50 @@ create policy "Allow anonymous insert"
 
 ---
 
-## 3단계: Supabase에서 URL이랑 anon key 가져오기
+## 3단계: Supabase에서 URL이랑 service_role 키 가져오기
 
-### 3-1. 설정 화면으로 들어가기
+저장이 안 되면 대부분 **anon 키 + RLS** 때문입니다. **service_role** 키를 쓰면 RLS 없이 저장됩니다. (서버에서만 쓰므로 노출되지 않음)
 
-1. Supabase 대시보드 **왼쪽 세로 메뉴**를 맨 아래까지 내립니다.
-2. **Project Settings**(톱니바퀴 아이콘 + "Project Settings" 글자)를 클릭합니다.  
-   - 보통 **"Home" / "Table Editor" / "SQL Editor" … 맨 아래 "Project Settings"** 에 있습니다.
-3. 설정 화면이 열리면 왼쪽에서 **API** 탭을 클릭합니다.
+### 3-1. 설정 화면
+
+1. Supabase 대시보드 왼쪽 맨 아래 **Project Settings**(톱니바퀴) 클릭
+2. 왼쪽에서 **API** 탭 클릭
 
 ### 3-2. Project URL 복사
 
-1. **Configuration** 섹션에서 **Project URL** 이 보입니다.
-2. 오른쪽에 있는 **긴 주소**(`https://xxxxx.supabase.co` 형태) **전체**를 선택한 뒤 복사합니다.  
-   - 옆에 있는 **복사 버튼(클립보드 아이콘)** 이 있으면 그걸 눌러도 됩니다.
-3. 이 값이 **Vercel 환경 변수 `SUPABASE_URL`** 에 들어갈 값입니다.
+- **Configuration** 에서 **Project URL** (`https://xxxxx.supabase.co`) 전체 복사  
+→ Vercel 환경 변수 **`SUPABASE_URL`** 에 넣을 값
 
-### 3-3. anon / public key 복사
+### 3-3. service_role 키 복사 (필수)
 
-1. 같은 **API** 페이지에서 **Project API keys** 섹션으로 내려갑니다.
-2. **anon** / **public** 이라고 적힌 행을 찾습니다.  
-   - 표에 **Name** 이 `anon` 이고 **Role** 이 `anon` 인 줄입니다.  
-   - **API Key** 칸에 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` 처럼 긴 문자열이 있습니다.
-3. 그 **API Key** 옆 **복사 버튼**을 누르거나, 문자열 전체를 선택해서 복사합니다.  
-   - **secret / service_role 키가 아니라, anon (public) 키**를 복사해야 합니다.
-4. 이 값이 **Vercel 환경 변수 `SUPABASE_ANON_KEY`** 에 들어갈 값입니다.
+1. 같은 API 페이지에서 **Project API keys** 섹션으로 내려가기
+2. **service_role** 이라고 적힌 행 찾기 (anon 아래에 있음, **Role: service_role**)
+3. 그 행의 **API Key** 옆 **Reveal** 클릭 후 **복사**  
+   - 이 키는 **secret** 이라서 브라우저에 노출하면 안 되고, **Vercel 환경 변수에만** 넣으면 됨  
+→ Vercel 환경 변수 **`SUPABASE_SERVICE_ROLE_KEY`** 에 넣을 값
 
-### 3-4. 한 번에 확인
+### 3-4. 정리
 
-| 구분 | Supabase 화면에서 보이는 이름 | 복사한 값 넣는 곳 (Vercel) |
-|------|------------------------------|----------------------------|
-| 주소 | **Project URL** (Configuration) | `SUPABASE_URL` |
-| 키   | **anon** / **public** 의 **API Key** | `SUPABASE_ANON_KEY` |
-
-- URL은 `https://` 로 시작하고 `.supabase.co` 로 끝나야 합니다.
-- anon key는 `eyJ...` 로 시작하는 긴 문자열입니다. 앞뒤 공백 없이 통째로 넣으면 됩니다.
+| Vercel 환경 변수 이름 | Supabase에서 복사하는 곳 |
+|----------------------|--------------------------|
+| `SUPABASE_URL` | Project URL (Configuration) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Project API keys → **service_role** 행의 API Key (Reveal 후 복사) |
 
 ---
 
 ## 4단계: Vercel 환경 변수 설정
 
 1. [vercel.com](https://vercel.com) 로그인 → 이 로또 프로젝트 선택
-2. 상단 **Settings** → 왼쪽 **Environment Variables**
-3. **Add New** 클릭
-   - **Name**: `SUPABASE_URL`  
-   - **Value**: 3단계에서 복사한 Project URL  
-   - **Environment**: Production 체크  
-   - **Save**
-4. 다시 **Add New** 클릭
-   - **Name**: `SUPABASE_ANON_KEY`  
-   - **Value**: 3단계에서 복사한 anon public 키  
-   - **Environment**: Production 체크  
-   - **Save**
+2. **Settings** → **Environment Variables**
+3. **Add New** 로 아래 두 개 추가 (이름·값 정확히):
+
+| Name | Value |
+|------|--------|
+| `SUPABASE_URL` | 3단계에서 복사한 Project URL (앞뒤 공백 없이) |
+| `SUPABASE_SERVICE_ROLE_KEY` | 3단계에서 복사한 **service_role** 키 (Reveal 후 복사한 것, 앞뒤 공백 없이) |
+
+4. **Environment** 에서 **Production** 체크 후 **Save**
+5. **한 번 더 Save** 확인
 
 ---
 
