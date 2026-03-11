@@ -133,19 +133,21 @@ create policy "Allow anonymous insert"
 
 응답 예시:
 
-- `"SUPABASE_URL": "설정됨 (...)", "SUPABASE_ANON_KEY": "설정됨 (길이 200)"`, `"ok": true`  
+- `"SUPABASE_URL": "설정됨 (...)", "SUPABASE_SERVICE_ROLE_KEY": "설정됨 (권장)"`, `"ok": true`  
   → 환경 변수는 들어가 있는 상태. 아래 2)·3) 확인.
-- `"SUPABASE_URL": "없음"` 또는 `"SUPABASE_ANON_KEY": "없음"`  
-  → Vercel **Settings → Environment Variables** 에 두 값 모두 넣었는지 확인하고, **Redeploy** 한 번 더 한 뒤 다시 `/api/check-env` 확인.
+- `"SUPABASE_URL": "없음"` 또는 `"SUPABASE_SERVICE_ROLE_KEY": "없음"`  
+  → Vercel **Settings → Environment Variables** 에 `SUPABASE_URL`과 `SUPABASE_SERVICE_ROLE_KEY` 넣었는지 확인하고, **Redeploy** 한 번 더 한 뒤 다시 `/api/check-env` 확인.
 
 ### 2) 저장 시 나오는 메시지 확인
 
-번호 추천 또는 운세 뽑기를 한 번 하면, **저장이 실패할 때만** 브라우저에 **alert** 로 에러 메시지가 뜹니다.
+번호 추천 또는 운세 뽑기를 한 번 하면, **저장 성공/실패 메시지가 버튼 아래 로그 영역**에 표시됩니다. 실패 시 **왜 실패했는지(detail)** 도 함께 나옵니다.
 
-- **"SUPABASE_URL or SUPABASE_ANON_KEY not set"**  
-  → 1)처럼 환경 변수 확인 후 Redeploy.
-- **"Supabase insert failed"** + `detail`  
-  → Supabase 쪽 오류. `detail` 내용이 RLS/권한 관련이면 3)의 RLS 확인.
+- **"저장 실패: 환경 변수 없음 — ..."**  
+  → 1)처럼 Vercel에 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` 넣고 **Redeploy**.
+- **"저장 실패: Supabase 저장 실패 — ..."**  
+  → 화면에 나온 뒤의 **상세 메시지**를 보세요.  
+  - 테이블/컬럼 없음, 권한(RLS) 문제 등이 그대로 나옵니다.  
+  - RLS/권한이면 3) 확인. 테이블이 없으면 2단계 SQL 다시 실행.
 - **"저장 요청 실패: ..."**  
   → `/api/save-lotto` 호출 실패(네트워크/404 등). 4) 확인.
 

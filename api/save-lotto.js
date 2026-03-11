@@ -90,13 +90,17 @@ module.exports = async function (req, res) {
     let detail = text;
     try {
       const errJson = JSON.parse(text);
-      detail = errJson.message || errJson.error_description || text;
+      const msg = errJson.message || errJson.error_description || errJson.msg || "";
+      const code = errJson.code ? " (코드: " + errJson.code + ")" : "";
+      const extra = [errJson.details, errJson.hint].filter(Boolean).join(" / ");
+      detail = msg ? msg + code + (extra ? " — " + extra : "") : text;
     } catch (_) {}
+    detail = (detail || "unknown").slice(0, 500);
     console.error("Supabase insert failed", response.status, detail);
     send(res, 500, {
       ok: false,
       error: "Supabase 저장 실패",
-      detail: (detail || "unknown").slice(0, 400),
+      detail: detail,
     });
     return;
   }

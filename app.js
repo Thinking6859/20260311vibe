@@ -59,7 +59,10 @@
         if (r.ok) {
           showSaveLog("저장 완료", false);
         } else {
-          var msg = (r.json && r.json.error) || r.json.detail || "status " + r.status;
+          var j = r.json || {};
+          var err = j.error || ("status " + r.status);
+          var detail = j.detail;
+          var msg = detail ? err + " — " + detail : err;
           showSaveLog("저장 실패: " + msg, true);
         }
       })
